@@ -43,6 +43,10 @@ speaker-disjoint accuracy estimate. Original and later experiments used
 different labels, splits and scales; their MAEs cannot be compared without
 matching the evaluated cohort and target.
 
+The bilingual [experiment history](EXPERIMENTS.md) documents those earlier
+training, calibration and compression attempts, including unsuccessful variants
+and aggregate results. It does not describe a new independent model benchmark.
+
 Raters disagree in scale and in ordering. Recording quality, speech style,
 language and population shifts can affect predictions. Closely related
 recordings and cluster-level labels create dependence between examples.

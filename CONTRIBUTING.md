@@ -1,5 +1,8 @@
 # Contributing
 
+Read the bilingual [experiment history](EXPERIMENTS.md) for prior attempts,
+aggregate results and the limits of the historical evaluations.
+
 Start with the feature baseline and the dataset schema. Pull requests should
 include the exact target, split, random seed, dependency versions, aggregate
 metrics and a reproducible command. Explain how repeated votes, annotator

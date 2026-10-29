@@ -76,6 +76,30 @@ The initial data split groups recordings by acoustic similarity. It is not
 verified speaker-disjoint. No independent accuracy improvement over the
 original model is claimed by this release.
 
+### Experiments so far
+
+We have already explored:
+
+- HuBERT fine-tuning, alternative WavLM encoders, deeper heads, layer mixing,
+  attention pooling and pairwise ranking losses.
+- Microphone/room augmentation and transferring a rated window's label to
+  other windows from the same TRAIN recording.
+- Cluster/neighbor/graph label smoothing, rater shifts and range calibration,
+  smooth strictly increasing rater functions, and common-order aggregation.
+- Multiple seeds and weight averaging; INT8/INT4 quantization, smaller distilled
+  students and progressive pruning.
+
+Some models reduced overall error while making the highest human ratings worse.
+Later scale alignment gave a better trade-off on reused validation, but practical
+use led to restoring the original model. UINT8 ONNX was the useful compression
+result; more aggressive compression changed predictions too much.
+
+Cluster averaging plus smooth rater-scale alignment was promising in held-out
+**label-consensus diagnostics**. Its benefit for a retrained HuBERT still needs
+to be tested. See the bilingual [experiment history](EXPERIMENTS.md#english)
+for recipes, numerical results, unsuccessful attempts and evaluation limits,
+and [aggregate metrics](experiments/metrics.json) for machine-readable results.
+
 ### Reproducibility and contributions
 
 `assets.json` contains sizes and SHA256 hashes. The full model is exported as
@@ -176,6 +200,29 @@ voice-passability-baseline --dataset data
 Начальное разбиение данных учитывает акустическое сходство записей.
 Независимость выборок по говорящим не подтверждена. Этот релиз не заявляет
 независимо измеренного улучшения качества по сравнению с исходной моделью.
+
+### Что уже пробовали
+
+- Дообучение HuBERT, энкодеры WavLM, более глубокую голову, смешивание слоёв,
+  attention pooling и обучение попарному порядку.
+- Аугментации микрофона и помещения, перенос оценки отрезка на другие окна
+  той же TRAIN-записи.
+- Сглаживание меток по кластерам, соседям и графу; сдвиг и растяжение шкал,
+  гладкие строго возрастающие функции оценщиков и поиск общего порядка.
+- Несколько seed и усреднение весов; квантование INT8/INT4, компактных
+  дистиллированных учеников и постепенное прореживание.
+
+Часть моделей снижала общую ошибку, но хуже оценивала верхний диапазон.
+Позднее выравнивание шкал дало более удачный баланс на повторно использованной
+валидации, однако по результатам работы в боте вернули исходную модель.
+Практическим результатом сжатия стала UINT8 ONNX; более сильное уменьшение
+слишком меняло прогнозы.
+
+Кластерные средние с гладким выравниванием перспективны по отложенной
+**диагностике человеческой разметки**. Их пользу для дообученной HuBERT
+ещё нужно проверить. В двуязычной [истории экспериментов](EXPERIMENTS.md#russian)
+описаны рецепты, численные результаты, неудачные попытки и ограничения проверок.
+Есть также [машиночитаемые сводные метрики](experiments/metrics.json).
 
 ### Воспроизводимость и участие
 
