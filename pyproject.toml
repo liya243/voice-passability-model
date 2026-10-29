@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "voice-passability"
+version = "0.1.0"
+description = "Research tools for human-rated voice passability: inference, features and label analysis"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+dependencies = ["numpy>=1.24", "scipy>=1.10", "soundfile>=0.12"]
+
+[project.optional-dependencies]
+torch = ["torch>=2.2", "transformers>=4.40,<5", "safetensors>=0.4"]
+onnx = ["onnxruntime>=1.20,<2"]
+research = ["scikit-learn>=1.4"]
+
+[project.scripts]
+voice-passability = "voice_passability.infer:main"
+voice-passability-baseline = "voice_passability.baseline:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

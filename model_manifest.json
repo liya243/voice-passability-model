@@ -1,0 +1,25 @@
+{
+  "model": "original",
+  "training_step": 30000,
+  "tensors": 219,
+  "parameters": 94770837,
+  "weights_bitwise_match_source": true,
+  "optimizer_included": false,
+  "training_arguments_included": false,
+  "graph_docstrings_removed": true,
+  "original_checkpoint_sha256": "dc84f93024e7605dd7e0b79307b7186efb3adf65e5938e4f512bab4b86d28c60",
+  "artifacts": {
+    "model.safetensors": {
+      "bytes": 379109876,
+      "sha256": "1b1a91dd80340e97d7435459a4e0901ed0ac90c816b87f32c21bcef4a5568f1b"
+    },
+    "config.json": {
+      "bytes": 1335,
+      "sha256": "88bb72c3d75ed90d82d766329eb6bec8b28a11d6fa7d8df80d5ef0508308e3c4"
+    },
+    "model_uint8.onnx": {
+      "bytes": 122612530,
+      "sha256": "450652d55031bda05ab3dbb35d7d3f84bd753fd94c55263bd4ee65bc73de06b9"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "version": "v0.1.0",
+  "records": 9004,
+  "feature_dimensions": 192,
+  "clusters": 1352,
+  "raters": 43,
+  "individual_votes": 8582,
+  "cluster_votes": 646,
+  "adopted_cluster_means": 159,
+  "weak_legacy_labels": 8757,
+  "membership_revision": 1,
+  "split_counts": {
+    "train": 6302,
+    "validation": 1351,
+    "test": 1351
+  },
+  "feature_encoder": "speechbrain/spkrec-ecapa-voxceleb",
+  "distance": "cosine",
+  "threshold": 0.5,
+  "source_audio_included": false,
+  "telegram_identifiers_included": false,
+  "original_filenames_included": false,
+  "privacy": "Pseudonymized, not guaranteed anonymous. Speaker embeddings can link voices.",
+  "license": "CC-BY-4.0",
+  "label_unit": "0..100 human perception rating, not gender identity probability"
+}

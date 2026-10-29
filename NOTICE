@@ -1,0 +1,16 @@
+Voice passability research tools and fine-tuned weights
+Maintainer: liya243
+
+The waveform model is based on Meta/Facebook HuBERT base (facebook/hubert-base-ls960),
+whose upstream model card lists Apache License 2.0.
+HuBERT: Self-Supervised Speech Representation Learning by Masked Prediction of Hidden Units.
+https://huggingface.co/facebook/hubert-base-ls960
+https://arxiv.org/abs/2106.07447
+
+Dataset features were computed using SpeechBrain ECAPA-TDNN
+(speechbrain/spkrec-ecapa-voxceleb), upstream Apache License 2.0.
+https://huggingface.co/speechbrain/spkrec-ecapa-voxceleb
+The pretrained ECAPA encoder itself is not included in this release.
+
+Feature/rating data is separately licensed CC BY 4.0; see LICENSE_DATA.md.
+Source audio is not distributed or licensed by this project release.

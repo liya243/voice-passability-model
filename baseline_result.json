@@ -1,0 +1,16 @@
+{
+  "target": "mean genuine individual rating per recording (equal rater weight)",
+  "selected_alpha": 1,
+  "selection": "validation only",
+  "label_source": "individual; no weak or adopted labels",
+  "split_counts": {
+    "train": 3645,
+    "validation": 782,
+    "test": 810
+  },
+  "mae_points": {
+    "train": 13.066064003686702,
+    "validation": 13.140012537514458,
+    "test": 14.062430503885581
+  }
+}
