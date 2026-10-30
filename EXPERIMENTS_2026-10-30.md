@@ -2,6 +2,8 @@
 
 [English](#english) · [Русский](#russian) · [Earlier history](EXPERIMENTS.md) · [Release v0.2.0](https://github.com/liya243/voice-passability-model/releases/tag/v0.2.0)
 
+Next / Далее: [smooth expert targets and GPU comparison / гладкие экспертные цели и GPU-сравнение](EXPERIMENTS_2026-10-31.md).
+
 <a id="english"></a>
 
 ## English

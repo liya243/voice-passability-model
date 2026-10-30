@@ -6,6 +6,8 @@
 
 ## English
 
+Latest continuation: [smooth expert targets and twelve GPU trials](EXPERIMENTS_2026-10-31.md#english).
+
 This is a retrospective summary of the October 2026 experiments, checked against
 saved reports. **The public v0.1.0 weights are the original HuBERT model and its
 UINT8 ONNX export.** Later candidates were tried in the bot, but the owner
@@ -238,6 +240,8 @@ overall error, preserve raw judgments and separate derived labels from new votes
 <a id="russian"></a>
 
 ## Русский
+
+Последнее продолжение: [гладкие экспертные цели и двенадцать GPU-обучений](EXPERIMENTS_2026-10-31.md#russian).
 
 Это сводка экспериментов октября 2026 года, сверенная с сохранёнными отчётами.
 **В открытом релизе v0.1.0 находятся исходная HuBERT-модель и её UINT8 ONNX-версия.**

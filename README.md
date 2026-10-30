@@ -13,6 +13,11 @@ models and reproducible training are welcome.
 [Model card](MODEL_CARD.md) ·
 [Dataset card and schema](DATASET_CARD.md) · [Contributing](CONTRIBUTING.md)
 
+**Latest experiment log:** [smooth expert targets, October 30–31](EXPERIMENTS_2026-10-31.md#english).
+The local interpolation check was promising; twelve GPU trials did not establish
+a robust replacement for the retained expert models. Aggregate metrics and
+figures are published; no unsuccessful model weights were added.
+
 **New: [v0.2.0](https://github.com/liya243/voice-passability-model/releases/tag/v0.2.0)**
 adds nine selected checkpoints, expert UINT8 and compact ECAPA students. The
 **expert mini** is currently under trial in the bot and live miniapp. See the
@@ -166,6 +171,11 @@ by this release. See [NOTICE](NOTICE) for pretrained-model attribution.
 
 [Карточка модели](MODEL_CARD.md) · [Карточка и схема датасета](DATASET_CARD.md) ·
 [Как участвовать](CONTRIBUTING.md)
+
+**Новая запись в истории:** [гладкие экспертные цели, 30–31 октября](EXPERIMENTS_2026-10-31.md#russian).
+Локальная интерполяция дала полезный сигнал, но двенадцать GPU-обучений не
+подтвердили устойчивую замену сохранённых экспертных моделей. Опубликованы
+метрики и графики; неудачные веса не добавлялись.
 
 **Новое: [v0.2.0](https://github.com/liya243/voice-passability-model/releases/tag/v0.2.0)** —
 девять выбранных чекпойнтов, экспертная UINT8 и компактные ECAPA.
