@@ -10,7 +10,10 @@ This is a retrospective summary of the October 2026 experiments, checked against
 saved reports. **The public v0.1.0 weights are the original HuBERT model and its
 UINT8 ONNX export.** Later candidates were tried in the bot, but the owner
 preferred the original in practical use and requested its restoration.
-Experimental weights are not included in this release.
+Experimental weights were not included in v0.1.0. The later
+[October 30 continuation](EXPERIMENTS_2026-10-30.md#english) covers expert
+fine-tuning, successful ECAPA distillation, six-model evaluation and the nine
+selected checkpoints now available in v0.2.0.
 
 ### How to read the results
 
@@ -240,7 +243,9 @@ overall error, preserve raw judgments and separate derived labels from new votes
 **В открытом релизе v0.1.0 находятся исходная HuBERT-модель и её UINT8 ONNX-версия.**
 Поздние модели пробовали в боте, но по результатам использования владелица
 предпочла исходную и попросила её вернуть. Экспериментальные веса в этот релиз
-не включены.
+не включены. В [продолжении от 30 октября](EXPERIMENTS_2026-10-30.md#russian)
+описаны экспертное обучение, удачная дистилляция ECAPA и сравнение шести моделей;
+девять выбранных чекпойнтов доступны в v0.2.0.
 
 ### Как читать результаты
 

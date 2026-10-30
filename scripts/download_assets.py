@@ -9,8 +9,8 @@ def sha256(path):
         while block:=handle.read(1024*1024):digest.update(block)
     return digest.hexdigest()
 
-def download(name,output,manifest):
-    output.mkdir(parents=True,exist_ok=True);target=output/name
+def download(name,output,manifest,target_name=None):
+    output.mkdir(parents=True,exist_ok=True);target=output/(target_name or name)
     wanted=manifest['assets'][name]['sha256']
     if target.exists() and sha256(target)==wanted:return target
     url=f'https://github.com/{manifest["repository"]}/releases/download/{manifest["tag"]}/{name}'
@@ -28,13 +28,24 @@ def download(name,output,manifest):
     return target
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--backend',choices=['torch','onnx'])
+    p=argparse.ArgumentParser();p.add_argument('--backend',choices=['torch','onnx','torchscript'])
+    p.add_argument('--variant',help='Named v0.2.0 model; see model_zoo.json. Omit for the original v0.1.0 model.')
     p.add_argument('--dataset',action='store_true');p.add_argument('--output',type=Path,default=ROOT/'artifacts')
     p.add_argument('--data-dir',type=Path,default=ROOT/'data');args=p.parse_args()
     if not args.backend and not args.dataset:p.error('Choose --backend or --dataset')
     manifest=json.loads((ROOT/'assets.json').read_text())
-    for name in (['model.safetensors','config.json'] if args.backend=='torch' else ['model_uint8.onnx'] if args.backend=='onnx' else []):
-        download(name,args.output,manifest)
+    if args.variant:
+        zoo=json.loads((ROOT/'model_zoo.json').read_text())
+        model=zoo['models'].get(args.variant)
+        if not model:p.error('Unknown variant; choose from '+', '.join(zoo['models']))
+        if args.backend not in model['backends']:p.error('Choose a supported backend: '+', '.join(model['backends']))
+        model_manifest=json.loads((ROOT/'assets-v0.2.0.json').read_text())
+        for entry in model['backends'][args.backend]:
+            download(entry['asset'],args.output,model_manifest,entry['target'])
+    else:
+        if args.backend=='torchscript':p.error('TorchScript requires --variant expert-mini or original-mini')
+        for name in (['model.safetensors','config.json'] if args.backend=='torch' else ['model_uint8.onnx'] if args.backend=='onnx' else []):
+            download(name,args.output,manifest)
     if args.dataset:
         archive=download('features-and-ratings-v0.1.0.zip',args.output,manifest)
         allowed={'ecapa_features.npz','records.csv.gz','individual_ratings.csv.gz','cluster_ratings.csv.gz',

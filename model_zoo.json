@@ -1,0 +1,217 @@
+{
+  "release": "v0.2.0",
+  "default_trial_model": "expert-mini",
+  "models": {
+    "expert-hubert-v1": {
+      "name": "expert-hubert-v1",
+      "description": "Expert HuBERT teacher, refine_02",
+      "architecture": "hubert",
+      "parameters": 94770837,
+      "source_checkpoint_sha256": "2f260f1735d2129eaa123ba6e2b2b4e75d78024325dcb2d4d7043ebca89b707a",
+      "backends": {
+        "torch": [
+          {
+            "asset": "expert-hubert-v1.safetensors",
+            "target": "model.safetensors"
+          },
+          {
+            "asset": "expert-hubert-v1.config.json",
+            "target": "config.json"
+          }
+        ],
+        "onnx": [
+          {
+            "asset": "expert-hubert-v1-uint8.onnx",
+            "target": "model_uint8.onnx"
+          },
+          {
+            "asset": "expert-hubert-v1.config.json",
+            "target": "config.json"
+          }
+        ]
+      }
+    },
+    "expert-hubert-recording": {
+      "name": "expert-hubert-recording",
+      "description": "Selected full HuBERT on common-recording validation",
+      "architecture": "hubert",
+      "parameters": 94770837,
+      "source_checkpoint_sha256": "3222bef46cb881b7afc0272ac233f001e40eb2997b27f7435521ecdde86b294d",
+      "backends": {
+        "torch": [
+          {
+            "asset": "expert-hubert-recording.safetensors",
+            "target": "model.safetensors"
+          },
+          {
+            "asset": "expert-hubert-recording.config.json",
+            "target": "config.json"
+          }
+        ]
+      }
+    },
+    "expert-ecapa-supervised": {
+      "name": "expert-ecapa-supervised",
+      "description": "Supervised ECAPA winner; 2s TRAIN windows, 5s inference",
+      "architecture": "ecapa_tdnn",
+      "parameters": 20792769,
+      "source_checkpoint_sha256": "cd04e968abf8927eac2843b8cec66aa9f386ed7a738da1666bf1ee0d91d8d919",
+      "backends": {
+        "torch": [
+          {
+            "asset": "expert-ecapa-supervised.safetensors",
+            "target": "model.safetensors"
+          },
+          {
+            "asset": "expert-ecapa-supervised.config.json",
+            "target": "config.json"
+          }
+        ]
+      }
+    },
+    "expert-ecapa-distilled-human": {
+      "name": "expert-ecapa-distilled-human",
+      "description": "ECAPA1024 selected by expert validation objective",
+      "architecture": "ecapa_tdnn",
+      "parameters": 20792769,
+      "source_checkpoint_sha256": "565574e37f2de107f2318ee8b6aee8fa16ebbebf735e39d5daf47df9dc79d9ce",
+      "backends": {
+        "torch": [
+          {
+            "asset": "expert-ecapa-distilled-human.safetensors",
+            "target": "model.safetensors"
+          },
+          {
+            "asset": "expert-ecapa-distilled-human.config.json",
+            "target": "config.json"
+          }
+        ]
+      }
+    },
+    "expert-ecapa-distilled-fidelity": {
+      "name": "expert-ecapa-distilled-fidelity",
+      "description": "ECAPA1024 selected by teacher fidelity",
+      "architecture": "ecapa_tdnn",
+      "parameters": 20792769,
+      "source_checkpoint_sha256": "ae69343ebdf1bd548202dcba692691f9bb71b949f8d52477bd7b1c072774f8b1",
+      "backends": {
+        "torch": [
+          {
+            "asset": "expert-ecapa-distilled-fidelity.safetensors",
+            "target": "model.safetensors"
+          },
+          {
+            "asset": "expert-ecapa-distilled-fidelity.config.json",
+            "target": "config.json"
+          }
+        ]
+      }
+    },
+    "expert-mini": {
+      "name": "expert-mini",
+      "description": "ECAPA256 selected by expert validation; bot and live trial",
+      "architecture": "ecapa_tdnn",
+      "parameters": 1779873,
+      "source_checkpoint_sha256": "ada078a51b18126c5dde89fa6af4c762f0644ae8dc5f55aef6b752880814d6e9",
+      "backends": {
+        "torch": [
+          {
+            "asset": "expert-mini.safetensors",
+            "target": "model.safetensors"
+          },
+          {
+            "asset": "expert-mini.config.json",
+            "target": "config.json"
+          }
+        ],
+        "torchscript": [
+          {
+            "asset": "expert-mini-ecapa256.ts",
+            "target": "model.ts"
+          },
+          {
+            "asset": "expert-mini.config.json",
+            "target": "config.json"
+          },
+          {
+            "asset": "expert-mini-ecapa256-runtime.json",
+            "target": "runtime.json"
+          }
+        ]
+      }
+    },
+    "original-mini": {
+      "name": "original-mini",
+      "description": "ECAPA256 selected by original-teacher validation fidelity",
+      "architecture": "ecapa_tdnn",
+      "parameters": 1779873,
+      "source_checkpoint_sha256": "8ae4577c40855e70e486ee74973d4ab97bf7e761b22a30a1bfcce82c8fdc494b",
+      "backends": {
+        "torch": [
+          {
+            "asset": "original-mini.safetensors",
+            "target": "model.safetensors"
+          },
+          {
+            "asset": "original-mini.config.json",
+            "target": "config.json"
+          }
+        ],
+        "torchscript": [
+          {
+            "asset": "original-mini-ecapa256.ts",
+            "target": "model.ts"
+          },
+          {
+            "asset": "original-mini.config.json",
+            "target": "config.json"
+          },
+          {
+            "asset": "original-mini-ecapa256-runtime.json",
+            "target": "runtime.json"
+          }
+        ]
+      }
+    },
+    "original-mini-human": {
+      "name": "original-mini-human",
+      "description": "ECAPA256 selected by expert validation objective",
+      "architecture": "ecapa_tdnn",
+      "parameters": 1779873,
+      "source_checkpoint_sha256": "225b0ecda2b6adf7dbbcc1e062e696a2e8b7deb9db211962e24c3bf91ed3d286",
+      "backends": {
+        "torch": [
+          {
+            "asset": "original-mini-human.safetensors",
+            "target": "model.safetensors"
+          },
+          {
+            "asset": "original-mini-human.config.json",
+            "target": "config.json"
+          }
+        ]
+      }
+    },
+    "original-ecapa384": {
+      "name": "original-ecapa384",
+      "description": "ECAPA384 selected by original-teacher validation fidelity",
+      "architecture": "ecapa_tdnn",
+      "parameters": 3442577,
+      "source_checkpoint_sha256": "6de1ab4e83d467bbdd1dbc6d9ad1ab7fdaa55aaad74e85578261f8d7c389d9c2",
+      "backends": {
+        "torch": [
+          {
+            "asset": "original-ecapa384.safetensors",
+            "target": "model.safetensors"
+          },
+          {
+            "asset": "original-ecapa384.config.json",
+            "target": "config.json"
+          }
+        ]
+      }
+    }
+  },
+  "original_baseline_release": "v0.1.0",
+  "note": "Selected research checkpoints, not independent accuracy guarantees. Source checkpoint hashes refer to private training containers; public tensors have new hashes after metadata-safe export."
+}

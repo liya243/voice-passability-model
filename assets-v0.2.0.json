@@ -1,0 +1,134 @@
+{
+  "repository": "liya243/voice-passability-model",
+  "tag": "v0.2.0",
+  "assets": {
+    "CONVERSION_VERIFICATION.json": {
+      "bytes": 7748,
+      "sha256": "a116d81bd6fcd22982f4bc6a7804affddfcb0f10e65e32740b9a95d7348333b1"
+    },
+    "EXPERIMENTS_2026-10-30.md": {
+      "bytes": 25543,
+      "sha256": "1eb24c05bd04d8532e202739b781c442043b1027b440c6061adc48d3a3a8af75"
+    },
+    "LICENSE": {
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    "MODEL_CARD.md": {
+      "bytes": 7011,
+      "sha256": "f4f04f8d41cac6af29872e7dcf0041bea2ae599d11b86f983db25bef4880137b"
+    },
+    "MODEL_CATALOG.json": {
+      "bytes": 6865,
+      "sha256": "3bb8f9ac5f00113c1eed7d556800fa1bcced84e9bb6f0542b2836b301a4001ac"
+    },
+    "NOTICE": {
+      "bytes": 1159,
+      "sha256": "7731c080486d3c6608dab284b8d4c057bcc109f912f9a35d4d9e50de5e0547e7"
+    },
+    "VERIFICATION_V0.2.md": {
+      "bytes": 6000,
+      "sha256": "83f028ad0ac5b10c1a76a49d51d41dfa810fd15d6de75529d515c781a0612bbd"
+    },
+    "benchmark-2026-10-30.json": {
+      "bytes": 1644410,
+      "sha256": "b52751311616a29a2517d116670b844ca4631c307cbdb7f7191b1711b63d6135"
+    },
+    "error-distributions-20261030.zip": {
+      "bytes": 4874029,
+      "sha256": "b6c5ea8a99d7512c9add61b7ac794bcf305b8db75394f25a5887e7caca01d311"
+    },
+    "expert-ecapa-distilled-fidelity.config.json": {
+      "bytes": 429,
+      "sha256": "f0ff0352928b96276f8143c5e4bfbd297c0b3c58c2f663883dc2a8b22ed45c41"
+    },
+    "expert-ecapa-distilled-fidelity.safetensors": {
+      "bytes": 83354540,
+      "sha256": "a38c230aa0ca6b910501bb3207c5b769cd74d44b826b99ac129d9799306b2111"
+    },
+    "expert-ecapa-distilled-human.config.json": {
+      "bytes": 429,
+      "sha256": "f0ff0352928b96276f8143c5e4bfbd297c0b3c58c2f663883dc2a8b22ed45c41"
+    },
+    "expert-ecapa-distilled-human.safetensors": {
+      "bytes": 83354532,
+      "sha256": "8b7ce24438b1f36548899f4964daf5b56791266a5d7e83905b49e358c4344821"
+    },
+    "expert-ecapa-supervised.config.json": {
+      "bytes": 429,
+      "sha256": "f0ff0352928b96276f8143c5e4bfbd297c0b3c58c2f663883dc2a8b22ed45c41"
+    },
+    "expert-ecapa-supervised.safetensors": {
+      "bytes": 83354532,
+      "sha256": "79bf23739fbb764a7d7476026186468f81178e37a3ba7cce5d6dec2a451afd33"
+    },
+    "expert-hubert-recording.config.json": {
+      "bytes": 2736,
+      "sha256": "2d6fda7d9266423bc065109cb5e05b01c7a51a4c8c3d434a6948c4fe1925b9c4"
+    },
+    "expert-hubert-recording.safetensors": {
+      "bytes": 379109836,
+      "sha256": "e6e58785dbb005cac1209134440c7983c72ee21db6d3cec034b7ce28f9ae7507"
+    },
+    "expert-hubert-v1-uint8.onnx": {
+      "bytes": 122586263,
+      "sha256": "f90c7e2b9d3b4b071272aa0a93261df4bb0b018f534962bfc2a1de61fa1edf4b"
+    },
+    "expert-hubert-v1.config.json": {
+      "bytes": 2736,
+      "sha256": "2d6fda7d9266423bc065109cb5e05b01c7a51a4c8c3d434a6948c4fe1925b9c4"
+    },
+    "expert-hubert-v1.safetensors": {
+      "bytes": 379109828,
+      "sha256": "dc9adadf0619924f3c24eb3dfb546e109e34dc8fc47083acbef865ba2be443aa"
+    },
+    "expert-mini-ecapa256-runtime.json": {
+      "bytes": 939,
+      "sha256": "ab019d10c8dce20ea855848e814b781ba5ecc8ce7052f6fe59f96323afb1363d"
+    },
+    "expert-mini-ecapa256.ts": {
+      "bytes": 7270196,
+      "sha256": "0ba3ba56ab929d6b4aaaa23dfdf582775b262452b856243f9aaa30fc2cf9cdde"
+    },
+    "expert-mini.config.json": {
+      "bytes": 428,
+      "sha256": "1b5248944011f3e8945573431c8ccecc2dc881cd4c222855df84d67619d7b8b5"
+    },
+    "expert-mini.safetensors": {
+      "bytes": 7187452,
+      "sha256": "c974fabf4fcc54952da35b56c2ddb2b50f4efd4a8aa3a625575024f1be0454d2"
+    },
+    "original-ecapa384.config.json": {
+      "bytes": 428,
+      "sha256": "43cfc56a6b7b10d459c67a1c92284fcefe0a1e6b5b42a7f9cde13f9cd4b3ad04"
+    },
+    "original-ecapa384.safetensors": {
+      "bytes": 13857396,
+      "sha256": "eed9898bb5ccecc87dba3cf7203177b2cc340c730ea4665fd36c965075e30a3b"
+    },
+    "original-mini-ecapa256-runtime.json": {
+      "bytes": 941,
+      "sha256": "b9344ca088f2150ee0be18c42869f410747530cfbd22c8e2604bb3d6560fe413"
+    },
+    "original-mini-ecapa256.ts": {
+      "bytes": 7271068,
+      "sha256": "06070d0316a0292988cdb07de0af2d97485a231cc579f16dd4a7b627353eb482"
+    },
+    "original-mini-human.config.json": {
+      "bytes": 428,
+      "sha256": "1b5248944011f3e8945573431c8ccecc2dc881cd4c222855df84d67619d7b8b5"
+    },
+    "original-mini-human.safetensors": {
+      "bytes": 7187460,
+      "sha256": "2375732af12b068baea104405b90ef335a977d550655a7684cd3797330e03847"
+    },
+    "original-mini.config.json": {
+      "bytes": 428,
+      "sha256": "1b5248944011f3e8945573431c8ccecc2dc881cd4c222855df84d67619d7b8b5"
+    },
+    "original-mini.safetensors": {
+      "bytes": 7187452,
+      "sha256": "e9a1acbc3ad5fd381089dec361d2544c27e1c94dcb8fafa10a3a223ffc39ff15"
+    }
+  }
+}

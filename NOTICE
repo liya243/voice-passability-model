@@ -10,7 +10,12 @@ https://arxiv.org/abs/2106.07447
 Dataset features were computed using SpeechBrain ECAPA-TDNN
 (speechbrain/spkrec-ecapa-voxceleb), upstream Apache License 2.0.
 https://huggingface.co/speechbrain/spkrec-ecapa-voxceleb
-The pretrained ECAPA encoder itself is not included in this release.
+The v0.2.0 expert ECAPA1024 regressors include fine-tuned weights derived from
+this VoxCeleb-pretrained encoder. The ECAPA256/384 mini students were initialized
+from scratch and distilled from the respective HuBERT teacher.
+ECAPA inference architecture/frontend uses SpeechBrain 1.0.3 (Apache-2.0):
+https://github.com/speechbrain/speechbrain/blob/v1.0.3/LICENSE
+https://huggingface.co/speechbrain/spkrec-ecapa-voxceleb/raw/main/README.md
 
 Feature/rating data is separately licensed CC BY 4.0; see LICENSE_DATA.md.
 Source audio is not distributed or licensed by this project release.
