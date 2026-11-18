@@ -3,7 +3,7 @@
 ## Scope
 
 9,004 recording-level 192-dimensional embeddings, 1,352 current clusters,
-43 pseudonymized raters, 8,582 genuine individual listening ratings,
+42 pseudonymized raters, 8,520 genuine individual listening ratings,
 646 genuine cluster ratings, 159 separately marked adopted cluster means,
 and 8,757 historical weak labels. The release is a fixed snapshot; online
 collection continues separately. See `dataset_manifest.json` for counts.

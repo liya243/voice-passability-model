@@ -19,12 +19,12 @@
       "sha256": "05671e2599d88455251752ac5e290846f7df3a4be17ac406c290a442fa0ac37e"
     },
     "features-and-ratings-v0.1.0.zip": {
-      "bytes": 6989315,
-      "sha256": "3f361c66a7a893a593adb77784f327414d1af7dfe8ea8b1f926567db3105dd15"
+      "bytes": 6987943,
+      "sha256": "e0f510e4bff102587c5b5c74f6d45cb5ee953d018540e24767e2eaccfb0f27f5"
     },
     "dataset_manifest.json": {
       "bytes": 757,
-      "sha256": "63f649230f2abe5167843fbfc40e46d16741947ab91c12e6d85e063cc0c39179"
+      "sha256": "438aeaed8181b71cb83acc027b0439d8454cd188c76fde488df590b0fa807b64"
     }
   }
 }

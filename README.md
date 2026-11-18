@@ -89,7 +89,7 @@ voice-passability-baseline --dataset data
 ```
 
 The dataset contains **9,004 recording-level ECAPA vectors (192 values)**,
-8,582 individual ratings, 646 genuine cluster ratings, and separately marked
+8,520 individual ratings, 646 genuine cluster ratings, and separately marked
 historical/derived labels. Forty-three raters have random six-digit IDs
 consistent across tables. Records and clusters have random identifiers too.
 Original names, Telegram IDs, timestamps and source audio are excluded.
