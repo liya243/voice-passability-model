@@ -1,5 +1,7 @@
 # ECAPA features and human ratings — v0.1.0
 
+Later gold-set ratings, expert-anchored consensus labels and voice-weight pairs are described in [DATASET_CARD_V0.3.md](DATASET_CARD_V0.3.md).
+
 ## Scope
 
 9,004 recording-level 192-dimensional embeddings, 1,352 current clusters,

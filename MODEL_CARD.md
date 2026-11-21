@@ -1,5 +1,28 @@
 # Model card: HuBERT and ECAPA voice-passability regressors
 
+## v0.3.0 additions
+
+Two full HuBERT models, fine-tuned on November 21, 2026 from the original v0.1.0 model, are published as safetensors and U8U8 ONNX.
+
+| Variant | Training | Role |
+|---|---|---|
+| pass-ft3-20261121 | All 12 layers; expert-anchored consensus labels; retention 0.5 to the recalibrated original | In the bot and the live miniapp since 2026-11-21 |
+| pass-ft7-20261121 | Same, retention 0.1, lr 2e-5, weight ×2 for consensus ≥ 70 | Fallback, stronger above 80 |
+
+Both share the original architecture and input: 5 s windows, peak normalization per window, mean over windows.
+
+On gold set v1, against the consensus:
+
+- ft3 has MAE 10.7 against 16.9 for the original, 8.5 against 13.6 in the 40–90 range;
+- errors above 25 points drop from 24% to 6%;
+- at 80–90 ft3 has MAE 10.4 against 6.4 for the original, and at 90–100 16.4 against 7.7.
+
+The original scored about 14 points above listeners; ft3 scores 3–4 points above. Scores from the new models are therefore lower on average.
+
+Training excluded every voice cluster that holds a gold segment, as well as English recordings. The U8U8 ONNX differs from the full model by 0.56 points on average ([CONVERSION_VERIFICATION_V0.3.json](https://github.com/liya243/voice-passability-model/releases/tag/v0.3.0)).
+
+Voice weight v2 is a separate 15-feature Praat model: see [weight/README.md](weight/README.md). All results are in [EXPERIMENTS_2026-11-21.md](EXPERIMENTS_2026-11-21.md).
+
 ## v0.2.0 additions
 
 The original model described below remains available in v0.1.0. v0.2.0 adds

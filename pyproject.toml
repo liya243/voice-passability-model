@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "voice-passability"
-version = "0.2.0"
+version = "0.3.0"
 description = "Research tools for human-rated voice passability: inference, features and label analysis"
 requires-python = ">=3.10"
 license = {file = "LICENSE"}

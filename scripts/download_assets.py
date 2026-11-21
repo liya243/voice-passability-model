@@ -29,23 +29,35 @@ def download(name,output,manifest,target_name=None):
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--backend',choices=['torch','onnx','torchscript'])
-    p.add_argument('--variant',help='Named v0.2.0 model; see model_zoo.json. Omit for the original v0.1.0 model.')
-    p.add_argument('--dataset',action='store_true');p.add_argument('--output',type=Path,default=ROOT/'artifacts')
+    p.add_argument('--variant',help='Named model from model_zoo.json (v0.2.0 or v0.3.0). Omit for the original v0.1.0 model.')
+    p.add_argument('--dataset',action='store_true');p.add_argument('--gold-weight-data',action='store_true',help='v0.3.0 gold ratings, consensus labels and weight pairs');p.add_argument('--output',type=Path,default=ROOT/'artifacts')
     p.add_argument('--data-dir',type=Path,default=ROOT/'data');args=p.parse_args()
-    if not args.backend and not args.dataset:p.error('Choose --backend or --dataset')
+    if not args.backend and not args.dataset and not args.gold_weight_data:p.error('Choose --backend, --dataset or --gold-weight-data')
     manifest=json.loads((ROOT/'assets.json').read_text())
     if args.variant:
         zoo=json.loads((ROOT/'model_zoo.json').read_text())
         model=zoo['models'].get(args.variant)
         if not model:p.error('Unknown variant; choose from '+', '.join(zoo['models']))
         if args.backend not in model['backends']:p.error('Choose a supported backend: '+', '.join(model['backends']))
-        model_manifest=json.loads((ROOT/'assets-v0.2.0.json').read_text())
+        model_manifest=json.loads((ROOT/('assets-%s.json'%model.get('release','v0.2.0'))).read_text())
         for entry in model['backends'][args.backend]:
             download(entry['asset'],args.output,model_manifest,entry['target'])
     else:
         if args.backend=='torchscript':p.error('TorchScript requires --variant expert-mini or original-mini')
         for name in (['model.safetensors','config.json'] if args.backend=='torch' else ['model_uint8.onnx'] if args.backend=='onnx' else []):
             download(name,args.output,manifest)
+    if args.gold_weight_data:
+        v3=json.loads((ROOT/'assets-v0.3.0.json').read_text())
+        archive=download('gold-and-weight-v0.3.0.zip',args.output,v3)
+        allowed={'gold_segments.csv.gz','gold_ratings.csv.gz','consensus_labels.csv.gz','rater_scales.csv','weight_clips.csv.gz',
+                 'weight_clip_wavlm.npz','weight_pairs.csv.gz','dataset_manifest_v0.3.0.json','DATASET_CARD_V0.3.md','LICENSE_DATA.md'}
+        args.data_dir.mkdir(parents=True,exist_ok=True)
+        with zipfile.ZipFile(archive) as z:
+            if set(z.namelist())!=allowed:raise RuntimeError('Unexpected dataset archive contents')
+            for name in z.namelist():
+                with z.open(name) as source,(args.data_dir/name).open('wb') as target:
+                    while block:=source.read(1024*1024):target.write(block)
+        print(args.data_dir)
     if args.dataset:
         archive=download('features-and-ratings-v0.1.0.zip',args.output,manifest)
         allowed={'ecapa_features.npz','records.csv.gz','individual_ratings.csv.gz','cluster_ratings.csv.gz',

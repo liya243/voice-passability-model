@@ -1,6 +1,6 @@
 {
-  "release": "v0.2.0",
-  "default_trial_model": "expert-mini",
+  "release": "v0.3.0",
+  "default_trial_model": "pass-ft3-20261121",
   "models": {
     "expert-hubert-v1": {
       "name": "expert-hubert-v1",
@@ -206,6 +206,66 @@
           },
           {
             "asset": "original-ecapa384.config.json",
+            "target": "config.json"
+          }
+        ]
+      }
+    },
+    "pass-ft3-20261121": {
+      "name": "pass-ft3-20261121",
+      "release": "v0.3.0",
+      "description": "Original HuBERT fine-tuned on expert-anchored consensus, all 12 layers, retention 0.5; in the bot since 2026-11-21",
+      "architecture": "hubert",
+      "parameters": 94770837,
+      "source_checkpoint_sha256": "2d5ff383097ecc5a4cb5b4782c2b8e98e5f656b67c8162d4199a43eb7437a05d",
+      "backends": {
+        "torch": [
+          {
+            "asset": "pass-ft3-20261121.safetensors",
+            "target": "model.safetensors"
+          },
+          {
+            "asset": "pass-ft3-20261121.config.json",
+            "target": "config.json"
+          }
+        ],
+        "onnx": [
+          {
+            "asset": "pass-ft3-20261121-uint8.onnx",
+            "target": "model_uint8.onnx"
+          },
+          {
+            "asset": "pass-ft3-20261121.config.json",
+            "target": "config.json"
+          }
+        ]
+      }
+    },
+    "pass-ft7-20261121": {
+      "name": "pass-ft7-20261121",
+      "release": "v0.3.0",
+      "description": "Like ft3 with retention 0.1, lr 2e-5 and double weight for consensus >= 70; fallback with a stronger top of the scale",
+      "architecture": "hubert",
+      "parameters": 94770837,
+      "source_checkpoint_sha256": "59f5a660ca32a673511705c21efa9ff7708afe1a2d86b02198acae698075ac7b",
+      "backends": {
+        "torch": [
+          {
+            "asset": "pass-ft7-20261121.safetensors",
+            "target": "model.safetensors"
+          },
+          {
+            "asset": "pass-ft7-20261121.config.json",
+            "target": "config.json"
+          }
+        ],
+        "onnx": [
+          {
+            "asset": "pass-ft7-20261121-uint8.onnx",
+            "target": "model_uint8.onnx"
+          },
+          {
+            "asset": "pass-ft7-20261121.config.json",
             "target": "config.json"
           }
         ]

@@ -13,6 +13,21 @@ models and reproducible training are welcome.
 [Model card](MODEL_CARD.md) ·
 [Dataset card and schema](DATASET_CARD.md) · [Contributing](CONTRIBUTING.md)
 
+**New: [v0.3.0](https://github.com/liya243/voice-passability-model/releases/tag/v0.3.0), November 21.** The release adds:
+
+- the gold set v1: 500 fixed five-second segments, 5,485 ratings, and per-segment scores of all models;
+- an expert-anchored consensus: every rater is placed on the expert's scale with a nonlinear curve, and labels cover 10,415 items;
+- two fine-tuned HuBERT models: **pass-ft3-20261121**, now in the bot, and the fallback **pass-ft7-20261121**;
+- voice weight v2 with the 807 pairwise weight votes behind it.
+
+On the gold set ft3 cuts MAE from 16.9 to 10.7, and from 13.6 to 8.5 in the 40–90 range; it is weaker than the original model above 80. No audio is included. Details: [experiment log](EXPERIMENTS_2026-11-21.md#english), [data card](DATASET_CARD_V0.3.md), [weight model](weight/README.md#english).
+
+```bash
+python scripts/download_assets.py --variant pass-ft3-20261121 --backend onnx --output artifacts/ft3
+voice-passability your_recording.wav --backend onnx --model-dir artifacts/ft3
+python scripts/download_assets.py --gold-weight-data
+```
+
 **Latest experiment log:** [smooth expert targets, October 30–31](EXPERIMENTS_2026-10-31.md#english).
 The local interpolation check was promising; twelve GPU trials did not establish
 a robust replacement for the retained expert models. Aggregate metrics and
@@ -103,7 +118,7 @@ ranking and label analysis. End-to-end HuBERT fine-tuning requires waveforms;
 the ECAPA vectors cannot substitute for them. A small local-audio fine-tuning
 example is provided in `scripts/finetune.py` for recordings you can use.
 
-The dataset is the v0.1.0 snapshot; later expert judgments are not added to it.
+The dataset is the v0.1.0 snapshot; later gold-set and expert judgments are in the separate [v0.3.0 data](DATASET_CARD_V0.3.md).
 The initial data split groups recordings by acoustic similarity. It is not
 verified speaker-disjoint. No independent accuracy improvement over the
 original model is claimed by this release.
@@ -171,6 +186,21 @@ by this release. See [NOTICE](NOTICE) for pretrained-model attribution.
 
 [Карточка модели](MODEL_CARD.md) · [Карточка и схема датасета](DATASET_CARD.md) ·
 [Как участвовать](CONTRIBUTING.md)
+
+**Новое: [v0.3.0](https://github.com/liya243/voice-passability-model/releases/tag/v0.3.0), 21 ноября.** В релизе:
+
+- эталон v1: 500 фиксированных пятисекундных отрезков, 5 485 оценок и оценки всех моделей по каждому отрезку;
+- консенсус на шкале экспертки: каждый оценщик переводится на её шкалу своей нелинейной кривой, метки есть для 10 415 отрезков;
+- две дообученные HuBERT: **pass-ft3-20261121**, которая сейчас работает в боте, и запасная **pass-ft7-20261121**;
+- модель веса голоса v2 и 807 сравнений веса, на которых она обучена.
+
+На эталоне ft3 снижает MAE с 16.9 до 10.7, а в диапазоне 40–90 — с 13.6 до 8.5; выше 80 она слабее исходной. Аудио не включено. Подробности: [журнал экспериментов](EXPERIMENTS_2026-11-21.md#russian), [описание данных](DATASET_CARD_V0.3.md), [модель веса](weight/README.md#russian).
+
+```bash
+python scripts/download_assets.py --variant pass-ft3-20261121 --backend onnx --output artifacts/ft3
+voice-passability your_recording.wav --backend onnx --model-dir artifacts/ft3
+python scripts/download_assets.py --gold-weight-data
+```
 
 **Новая запись в истории:** [гладкие экспертные цели, 30–31 октября](EXPERIMENTS_2026-10-31.md#russian).
 Локальная интерполяция дала полезный сигнал, но двенадцать GPU-обучений не
@@ -267,7 +297,7 @@ voice-passability-baseline --dataset data
 нужны аудиозаписи; ECAPA-векторы их не заменяют. В `scripts/finetune.py` есть
 небольшой пример дообучения на собственных допустимых к использованию записях.
 
-Это снимок v0.1.0: поздние экспертные оценки в него не добавлялись.
+Это снимок v0.1.0: поздние оценки эталона и экспертки вынесены в отдельные [данные v0.3.0](DATASET_CARD_V0.3.md).
 Начальное разбиение данных учитывает акустическое сходство записей.
 Независимость выборок по говорящим не подтверждена. Этот релиз не заявляет
 независимо измеренного улучшения качества по сравнению с исходной моделью.

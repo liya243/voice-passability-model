@@ -1,0 +1,54 @@
+{
+  "repository": "liya243/voice-passability-model",
+  "tag": "v0.3.0",
+  "assets": {
+    "pass-ft3-20261121.safetensors": {
+      "bytes": 379109748,
+      "sha256": "2d5ff383097ecc5a4cb5b4782c2b8e98e5f656b67c8162d4199a43eb7437a05d"
+    },
+    "pass-ft3-20261121.config.json": {
+      "bytes": 2781,
+      "sha256": "67ad623e1e78c4e882d4ca18d61000224e2cdda79f2d7534e805d6f2e089bf68"
+    },
+    "pass-ft3-20261121-uint8.onnx": {
+      "bytes": 122155264,
+      "sha256": "1457a001832219d370e259de247de995db2c3bf521c2904bbb9daf5d6bec8b22"
+    },
+    "pass-ft7-20261121.safetensors": {
+      "bytes": 379109748,
+      "sha256": "59f5a660ca32a673511705c21efa9ff7708afe1a2d86b02198acae698075ac7b"
+    },
+    "pass-ft7-20261121.config.json": {
+      "bytes": 2812,
+      "sha256": "8dbbc1f463536fbf17f721ee5fecd01f98e1c5c48e18fb35caaaeb1f3275a4aa"
+    },
+    "pass-ft7-20261121-uint8.onnx": {
+      "bytes": 122101177,
+      "sha256": "dd554169c3888014f51334b48fa99c30fbbc6bbfbea3ee688267a3a3a10abe73"
+    },
+    "weight_v2.py": {
+      "bytes": 5805,
+      "sha256": "23f90b6eb7745fdf3444f2f8ba282fea8247ff6a25ebfab3b36b37ec72e736ab"
+    },
+    "weight_v2_20261121.json": {
+      "bytes": 5047,
+      "sha256": "6d31d3defd365bcc936074a2447887751324af22ce288e6985f594a93c813ae6"
+    },
+    "gold-and-weight-v0.3.0.zip": {
+      "bytes": 8445280,
+      "sha256": "30e01e86df6c94cca3a845172e36c1b18156483dc0a36ae3d6d47b4ef3be806a"
+    },
+    "CONVERSION_VERIFICATION_V0.3.json": {
+      "bytes": 408,
+      "sha256": "e394e569ff888dc34559d92adf649322a4790e075b0750a50ee560f2f1d7927e"
+    },
+    "EXPERIMENTS_2026-11-21.md": {
+      "bytes": 15891,
+      "sha256": "1c1bdea693e5de31eaa700fe92c4392b71c0c1f983f4e44c7790aebc32a5279b"
+    },
+    "DATASET_CARD_V0.3.md": {
+      "bytes": 4805,
+      "sha256": "08620e173826cd9092bd1a455c9773b0365909695a12369ff32fab6580d945f3"
+    }
+  }
+}
