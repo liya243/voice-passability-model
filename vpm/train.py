@@ -45,7 +45,7 @@ def args():
     ap.add_argument('--w_lang', type=float, default=1.0); ap.add_argument('--w_adv', type=float, default=0.1)
     ap.add_argument('--w_cis', type=float, default=0.5); ap.add_argument('--w_votes', type=float, default=1.0)
     ap.add_argument('--w_voice', type=float, default=0.3); ap.add_argument('--b_noise', type=int, default=6)
-    ap.add_argument('--warm', type=float, default=0.05)
+    ap.add_argument('--warm', type=float, default=0.05); ap.add_argument('--max_steps', type=int, default=0)
     ap.add_argument('--max_rec', type=int, default=4000); ap.add_argument('--seed', type=int, default=0)
     return ap.parse_args()
 
@@ -194,6 +194,8 @@ def main():
     opt = torch.optim.AdamW([{'params': bb, 'lr': a.lr_bb}, {'params': head, 'lr': a.lr_head}], weight_decay=0.01)
     lab = banks['lab']; z = np.array([x['z'] for x in lab.meta]); zsd = np.array([x['zsd'] for x in lab.meta])
     steps = a.epochs * (len(lab.x) // a.b_lab); warm = max(1, steps // 20)
+    if a.max_steps:
+        steps = min(steps, a.max_steps)
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda s: min(1, (s + 1) / warm) * 0.5 * (1 + math.cos(math.pi * min(1, s / steps))))
     n_votes = len(banks['votes'].x) // 2
     epoch = len(lab.x) // a.b_lab; w0 = int(a.warm * steps)
@@ -223,7 +225,7 @@ def main():
         with torch.autocast('cuda', dtype=torch.bfloat16):
             p, vlog, lg = m(x, heads=True, lam=r)
         p = p.float(); o = a.b_lab
-        yv = torch.cat([torch.ones(n_voiced), torch.zeros(len(ni))]).to(dev)
+        y_voice = torch.cat([torch.ones(n_voiced), torch.zeros(len(ni))]).to(dev)
         zt = torch.tensor(z[idx], device=dev, dtype=torch.float32); st = torch.tensor(zsd[idx], device=dev, dtype=torch.float32)
         parts = {'scale': L.scale(p[:o], zt, st), 'order': a.w_order * L.order_from_consensus(p[:o], zt, st)}
         if rp:
@@ -243,12 +245,12 @@ def main():
             if ok.any():
                 parts['votes'] = a.w_votes * L.order_from_votes(q[0::2][ok], q[1::2][ok], yv[ok])
         if len(ni):
-            parts['voice'] = a.w_voice * torch.nn.functional.binary_cross_entropy_with_logits(vlog.float(), yv)
+            parts['voice'] = a.w_voice * torch.nn.functional.binary_cross_entropy_with_logits(vlog.float(), y_voice)
         loss = sum(parts.values())
         opt.zero_grad(set_to_none=True); loss.backward()
         torch.nn.utils.clip_grad_norm_(m.parameters(), 1.0); opt.step(); sched.step()
         run.append({k: float(v) for k, v in parts.items()})
-        if (step + 1) % 200 == 0:
+        if (step + 1) % (20 if a.max_steps else 200) == 0:
             P(f'step {step + 1}/{steps} ramp {r:.2f}', {k: round(float(np.mean([q.get(k, 0) for q in run[-200:]])), 4) for k in parts}, f'{time.time() - t0:.0f}s')
         if (step + 1) % (len(lab.x) // a.b_lab) == 0 or step + 1 == steps:
             v = evaluate(m, banks['val'], dev, rng); P('val', json.dumps(v))

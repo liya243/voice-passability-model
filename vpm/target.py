@@ -9,6 +9,11 @@ A rater's noise is the disagreement with the expert on shared items minus the ex
 
 Only the order of z matters for training (see loss.py); z_sd sets how much an item is trusted.
 
+Soft cis anchors (when DATA/cis_links.csv and work/cislabel/labels.csv exist): an item recorded by a speaker
+labelled cis female adds log sigmoid((z - 90) / CIS_S) to its posterior, cis male log sigmoid((20 - z) / CIS_S).
+The expert's curve is then no longer fixed to the identity but fitted, monotone, with a strong pull toward it
+(EXPERT_LAM), so the anchors can stretch the ends of the scale while the expert's order is kept.
+
 Usage: python -m vpm.target  ->  work/target/items.csv, raters.csv, pairs.csv
 """
 import json
@@ -20,6 +25,8 @@ from .config import DATA, work
 K = np.linspace(0, 100, 11)
 G = np.arange(0, 101, 1.0)
 OVERLAP = 2.5        # a vote joins an item when the windows overlap by >= 2.5 s
+CIS_F, CIS_M, CIS_S = 90.0, 20.0, 3.0
+EXPERT_LAM = 200.0
 
 
 def _rel(p):
@@ -83,7 +90,14 @@ def build_items(votes, seed, gold):
     return pd.DataFrame(items), vi, by_file
 
 
-def consensus(expert, obs, N, retest, expert_boost=1.0, iters=25):
+def consensus(expert, obs, N, retest, expert_boost=1.0, iters=25, anchors=None):
+    """anchors: array of N with +1 (cis female), -1 (cis male), 0 (none)."""
+    A = np.zeros(N) if anchors is None else np.asarray(anchors, float)
+    soft = bool(np.any(A != 0))
+    cis_ll = np.zeros((N, len(G)))
+    lsig = lambda x: -np.logaddexp(0, -x)
+    cis_ll[A > 0] = lsig((G - CIS_F) / CIS_S)
+    cis_ll[A < 0] = lsig((CIS_M - G) / CIS_S)
     raters = obs.rater.unique()
     H = {r: K.copy() for r in raters}
     S2 = {r: 400.0 for r in raters}
@@ -97,7 +111,9 @@ def consensus(expert, obs, N, retest, expert_boost=1.0, iters=25):
         for r in raters:
             m = obs.rater == r
             if r == expert:
-                H[r] = K.copy(); S2[r] = retest ** 2; continue
+                m_e = obs.rater == expert
+                H[r] = fit_curve(z[obs.item[m_e]], obs.score[m_e].values, obs.w0[m_e].values, K, EXPERT_LAM) if soft else K.copy()
+                S2[r] = retest ** 2; continue
             H[r] = fit_curve(z[obs.item[m]], obs.score[m].values, obs.w0[m].values,
                              *((None, 0.0) if r == -1 else (pool, 30.0)))
             mm = m & obs.item.isin(exp_mean.index)
@@ -108,7 +124,7 @@ def consensus(expert, obs, N, retest, expert_boost=1.0, iters=25):
             S2[r] = max(25.0, (np.sum(obs.w0[mm].values * res2) + 10 * pool_s2) / (n + 10))
         pool_s2 = float(np.median([S2[r] for r in raters if r not in (expert, -1)]))
         w = obs.w0.values / np.array([S2[r] for r in obs.rater]) * np.where(obs.rater == expert, expert_boost, 1.0)
-        L = np.tile(-((G - 50) ** 2) / (2 * 40 ** 2), (N, 1))
+        L = np.tile(-((G - 50) ** 2) / (2 * 40 ** 2), (N, 1)) + cis_ll
         ridx = {r: k for k, r in enumerate(raters)}
         P = np.stack([np.interp(G, K, H[r]) for r in raters])[[ridx[r] for r in obs.rater]]
         np.add.at(L, obs.item.values, -0.5 * w[:, None] * (obs.score.values[:, None] - P) ** 2)
@@ -143,6 +159,18 @@ def pass_pairs(R, items):
     return pd.DataFrame(rows)
 
 
+def cis_anchors(items):
+    links, lab = DATA / 'cis_links.csv', work('cislabel', 'labels.csv')
+    a = np.zeros(len(items))
+    if links.exists() and lab.exists():
+        L = pd.read_csv(lab, keep_default_na=False).set_index('speaker').label
+        c = pd.read_csv(links)
+        c['label'] = c.speaker.map(L)
+        sign = dict(zip(c.rel, c.label.map({'f': 1, 'm': -1}).fillna(0)))
+        a = items.rel.map(sign).fillna(0).values
+    return a
+
+
 def main(expert_boost=1.0):
     R = DATA / 'ratings'
     expert, votes, seed, gv = load_votes(R)
@@ -156,7 +184,9 @@ def main(expert_boost=1.0):
                         'w0': np.r_[np.ones(len(votes)), [x[2] for x in sv]]})
     rep = gv[gv.author_id == expert].groupby('item_id').score.agg(['std', 'count'])
     retest = float(np.sqrt(np.mean(rep['std'][rep['count'] >= 2] ** 2)))
-    z, zsd, H, S2, n_it = consensus(expert, obs, len(items), retest, expert_boost)
+    anchors = cis_anchors(items)
+    z, zsd, H, S2, n_it = consensus(expert, obs, len(items), retest, expert_boost, anchors=anchors)
+    items['cis_anchor'] = anchors.astype(int)
     items['z'] = z.round(2); items['z_sd'] = zsd.round(2)
     cnt = obs[obs.rater != -1].groupby('item').rater
     items['n_listens'] = cnt.count().reindex(range(len(items))).fillna(0).astype(int).values
@@ -177,6 +207,12 @@ def main(expert_boost=1.0):
     pd.DataFrame(rows).sort_values('votes', ascending=False).to_csv(work('target', 'raters.csv'), index=False)
     pairs = pass_pairs(R, items)
     pairs.to_csv(work('target', 'pairs.csv'), index=False)
+    for v, n in ((1, 'cis f'), (-1, 'cis m')):
+        k = (items.cis_anchor == v) & (items.n_listens > 0)
+        if k.any():
+            print(f'{n}: {int(k.sum())} rated items, z median {items.z[k].median():.1f}')
+    e = H[expert]
+    print('expert curve h(z) at 0,20,..,100:', [round(float(x)) for x in e[::2]])
     print(f'consensus: {n_it} iterations, {len(items)} items ({int((items.n_listens > 0).sum())} listened, '
           f'{int(items.gold.notna().sum())} gold), expert retest sd {retest:.1f}, pair votes {len(pairs)}')
 

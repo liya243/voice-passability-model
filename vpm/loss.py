@@ -36,12 +36,18 @@ def order_from_votes(pa, pb, y):
     return F.binary_cross_entropy_with_logits((pa - pb) / TAU, y)
 
 
+def _hinge(excess):
+    """Points beyond a limit -> the same Huber scale as `scale` (so 10 points over costs about as much as 10 points of error)."""
+    e = F.relu(excess) / 100
+    return F.smooth_l1_loss(e, torch.zeros_like(e), beta=0.05)
+
+
 def same_voice(pa, pb, delta=DELTA):
-    return F.relu((pa - pb).abs() - delta).pow(2).mean() / 100
+    return _hinge((pa - pb).abs() - delta)
 
 
 def cis(p, label):
     f = label == 1; m = label == 0
-    lf = F.relu(CIS_F_FLOOR - p[f]).pow(2).mean() / 100 if f.any() else p.sum() * 0
-    lm = F.relu(p[m] - CIS_M_CEIL).pow(2).mean() / 100 if m.any() else p.sum() * 0
+    lf = _hinge(CIS_F_FLOOR - p[f]) if f.any() else p.sum() * 0
+    lm = _hinge(p[m] - CIS_M_CEIL) if m.any() else p.sum() * 0
     return lf + lm

@@ -25,10 +25,17 @@ class PassModel(nn.Module):
         super().__init__()
         from transformers import AutoModel, AutoConfig
         self.cfg = dict(backbone=backbone, n_languages=n_languages, hidden=hidden)
-        hub = BACKBONES[backbone][1]
-        self.bb = AutoModel.from_pretrained(hub)
+        kind, hub, _ = BACKBONES[backbone]
+        self.whisper = kind == 'whisper'
         c = AutoConfig.from_pretrained(hub)
-        L, D = c.num_hidden_layers + 1, c.hidden_size
+        if self.whisper:
+            from transformers import WhisperModel, WhisperFeatureExtractor
+            self.bb = WhisperModel.from_pretrained(hub).encoder
+            self.fe = WhisperFeatureExtractor.from_pretrained(hub)
+            L, D = c.encoder_layers + 1, c.d_model
+        else:
+            self.bb = AutoModel.from_pretrained(hub)
+            L, D = c.num_hidden_layers + 1, c.hidden_size
         self.norm_input = bool(getattr(c, 'feat_extract_norm', 'layer') == 'layer')
         self.mix = nn.Parameter(torch.zeros(L))
         self.att = nn.Sequential(nn.Linear(D, 128), nn.Tanh(), nn.Linear(128, 1))
@@ -37,9 +44,18 @@ class PassModel(nn.Module):
         self.voice = nn.Linear(hidden, 1)
         self.lang = nn.Linear(hidden, n_languages) if n_languages else None
 
+    def _whisper_hidden(self, x):
+        f = self.fe(list(x.float().cpu().numpy()), sampling_rate=16000, return_tensors='pt').input_features
+        hs = self.bb(f.to(x.device, dtype=next(self.bb.parameters()).dtype), output_hidden_states=True).hidden_states
+        n = x.shape[1] // 320                                    # 50 encoder frames per second
+        return [h[:, :n] for h in hs]
+
     def embed(self, x):
-        x = (x - x.mean(1, keepdim=True)) / (x.std(1, keepdim=True) + 1e-7)
-        hs = self.bb(x, output_hidden_states=True).hidden_states
+        if self.whisper:
+            hs = self._whisper_hidden(x)
+        else:
+            x = (x - x.mean(1, keepdim=True)) / (x.std(1, keepdim=True) + 1e-7)
+            hs = self.bb(x, output_hidden_states=True).hidden_states
         h = (torch.stack(hs, 0) * torch.softmax(self.mix, 0)[:, None, None, None]).sum(0)   # B, T, D
         a = torch.softmax(self.att(h).squeeze(-1), 1)[..., None]
         mu = (a * h).sum(1)
@@ -60,7 +76,7 @@ class PassModel(nn.Module):
     def unfreeze_top(self, n):
         for p in self.bb.parameters():
             p.requires_grad = False
-        layers = self.bb.encoder.layers
+        layers = self.bb.layers if self.whisper else self.bb.encoder.layers
         for l in layers[len(layers) - n:] if n else []:
             for p in l.parameters():
                 p.requires_grad = True
