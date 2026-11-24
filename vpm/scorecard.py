@@ -28,6 +28,8 @@ rng = np.random.default_rng(0)
 N_CONSIST = 600          # recordings of our test voices with >= 3 voiced windows
 N_LANG_SPK = 400         # TidyVoice test+val speakers with >= 2 languages
 N_CIS_SPK = 400          # per gender
+MIN_BAND_N = 10          # a band with fewer items is too noisy to call the worst
+CIS_LANG = {'cis_tg': 'ru', 'cis_fleurs_ru': 'ru', 'cis_fleurs_en': 'en', 'cis_librispeech': 'en'}
 
 
 def build():
@@ -86,7 +88,7 @@ def build():
 
 def _band_mae(y, p):
     e = np.abs(p - y); b = np.minimum(y // 10, 9).astype(int)
-    bands = {f'{10 * k}-{10 * k + 10}': (float(e[b == k].mean()) if (b == k).sum() >= 5 else None, int((b == k).sum())) for k in range(10)}
+    bands = {f'{10 * k}-{10 * k + 10}': (float(e[b == k].mean()) if (b == k).sum() >= MIN_BAND_N else None, int((b == k).sum())) for k in range(10)}
     i, j = np.triu_indices(len(y), 1)
     far = np.abs(y[i] - y[j]) >= 10
     order = float((np.sign(p[i] - p[j])[far] == np.sign(y[i] - y[j])[far]).mean())
@@ -137,11 +139,14 @@ def report_one(w, p):
         rec = recordings().set_index('rec')
         L = pd.read_csv(work('cislabel', 'labels.csv'), keep_default_na=False).set_index('speaker').label
         cs = cs.assign(label=L.reindex(rec.speaker.reindex(cs.rec).values).values)
-        per = cs.groupby('rec').agg(pred=('pred', 'mean'), label=('label', 'first'))
+        cs = cs.assign(lang=rec.source.reindex(cs.rec).map(CIS_LANG).values)
+        per = cs.groupby('rec').agg(pred=('pred', 'mean'), label=('label', 'first'), lang=('lang', 'first'))
         f, m = per.pred[per.label == 'f'], per.pred[per.label == 'm']
+        by_lang = {f'{g}_{l}': float(per.pred[(per.label == g) & (per.lang == l)].median())
+                   for g in 'fm' for l in ('ru', 'en') if ((per.label == g) & (per.lang == l)).sum() >= 10}
         out['cis'] = dict(n_f=len(f), n_m=len(m), median_f=float(f.median()), median_m=float(m.median()),
                           f_below_80=float((f < 80).mean()), m_above_20=float((m > 20).mean()),
-                          f_p10=float(f.quantile(0.1)), m_p90=float(m.quantile(0.9)))
+                          f_p10=float(f.quantile(0.1)), m_p90=float(m.quantile(0.9)), median_by_lang=by_lang)
     return out
 
 
@@ -152,25 +157,44 @@ def table(results):
         rows.append({'model': name, 'gold MAE': g.get('mae'), 'gold 40-90': g.get('mae_40_90'), 'gold worst band': g.get('worst_band'),
                      'gold order': g.get('order_acc'), 'heldout MAE': h.get('mae'), 'heldout worst band': h.get('worst_band'),
                      'window SD': c.get('within_sd'), 'lang gap': l.get('median_language_gap'), 'lang floor': l.get('same_language_half_gap'),
-                     'cis f med': s.get('median_f'), 'cis m med': s.get('median_m'), 'cis f<80': s.get('f_below_80')})
+                     'cis f med': s.get('median_f'), 'cis m med': s.get('median_m'), 'cis f<80': s.get('f_below_80'),
+                     'cis f ru/en': '/'.join(f"{s.get('median_by_lang', {}).get('f_' + l, float('nan')):.0f}" for l in ('ru', 'en')),
+                     'cis m ru/en': '/'.join(f"{s.get('median_by_lang', {}).get('m_' + l, float('nan')):.0f}" for l in ('ru', 'en'))})
     t = pd.DataFrame(rows).set_index('model')
     bands = pd.DataFrame({n: r['gold']['bands'] for n, r in results.items() if 'gold' in r}).T
     return t, bands
 
 
-def report(paths):
+def bootstrap_vs(w, preds, ref, n=2000):
+    """95 % interval of (model MAE - ref MAE) on gold, resampling gold items; below zero = better than ref."""
+    items = pd.read_csv(work('target', 'items.csv')).set_index('item')
+    g = (w.set == 'gold').values
+    y = items.z.reindex(w.item[g]).values
+    er = np.abs(preds[ref][g] - y)
+    out = {}
+    for k, p in preds.items():
+        d = np.abs(p[g] - y) - er
+        bs = [d[rng.integers(0, len(d), len(d))].mean() for _ in range(n)]
+        out[k] = f'{d.mean():+.2f} [{np.quantile(bs, 0.025):+.2f}, {np.quantile(bs, 0.975):+.2f}]'
+    return out
+
+
+def report(paths, ref=None):
     w = pd.read_csv(work('scorecard', 'windows.csv'), index_col='w')
-    res = {}
+    res = {}; preds = {}
     for f in paths:
         p = pd.read_csv(f).set_index('w').pred.reindex(w.index).values
+        preds[Path(f).stem] = p
         res[Path(f).stem] = r = report_one(w, p)
         json.dump(r, open(work('scorecard', Path(f).stem + '.json'), 'w'), indent=1)
     t, b = table(res)
-    pd.set_option('display.width', 250)
+    if ref:
+        t[f'gold vs {ref}'] = pd.Series(bootstrap_vs(w, preds, ref))
+    pd.set_option('display.width', 300)
     print(t.round(3).to_string()); print('\ngold MAE by consensus band'); print(b.round(1).to_string())
 
 
 if __name__ == '__main__':
-    ap = argparse.ArgumentParser(); ap.add_argument('cmd'); ap.add_argument('preds', nargs='*')
+    ap = argparse.ArgumentParser(); ap.add_argument('cmd'); ap.add_argument('preds', nargs='*'); ap.add_argument('--ref')
     a = ap.parse_args()
-    build() if a.cmd == 'build' else report(a.preds)
+    build() if a.cmd == 'build' else report(a.preds, a.ref)

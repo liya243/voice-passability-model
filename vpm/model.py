@@ -30,11 +30,15 @@ class PassModel(nn.Module):
         c = AutoConfig.from_pretrained(hub)
         if self.whisper:
             from transformers import WhisperModel, WhisperFeatureExtractor
-            self.bb = WhisperModel.from_pretrained(hub).encoder
+            wm = WhisperModel.from_pretrained(hub)
+            wm.gradient_checkpointing_enable()
+            self.bb = wm.encoder
             self.fe = WhisperFeatureExtractor.from_pretrained(hub)
             L, D = c.encoder_layers + 1, c.d_model
         else:
-            self.bb = AutoModel.from_pretrained(hub)
+            # layerdrop skips random layers in training, which changes the number of hidden states we mix
+            self.bb = AutoModel.from_pretrained(hub, layerdrop=0.0)
+            self.bb.gradient_checkpointing_enable()
             L, D = c.num_hidden_layers + 1, c.hidden_size
         self.norm_input = bool(getattr(c, 'feat_extract_norm', 'layer') == 'layer')
         self.mix = nn.Parameter(torch.zeros(L))
