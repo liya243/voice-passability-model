@@ -1,0 +1,11 @@
+work/
+__pycache__/
+*.pyc
+*.npy
+*.npz
+*.pt
+*.onnx
+*.wav
+*.opus
+*.csv
+!tests/*.csv

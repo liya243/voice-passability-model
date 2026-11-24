@@ -1,0 +1,12 @@
+[project]
+name = "vpm"
+version = "0.1.0"
+description = "Training pipeline and scorecard for a voice passability model"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy", "pandas", "scipy", "soundfile", "torch", "torchaudio", "transformers",
+  "speechbrain", "silero-vad", "praat-parselmouth", "huggingface_hub",
+]
+
+[tool.setuptools]
+packages = ["vpm"]
