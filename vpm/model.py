@@ -49,10 +49,23 @@ class PassModel(nn.Module):
         self.lang = nn.Linear(hidden, n_languages) if n_languages else None
 
     def _whisper_hidden(self, x):
-        f = self.fe(list(x.float().cpu().numpy()), sampling_rate=16000, return_tensors='pt').input_features
-        hs = self.bb(f.to(x.device, dtype=next(self.bb.parameters()).dtype), output_hidden_states=True).hidden_states
-        n = x.shape[1] // 320                                    # 50 encoder frames per second
-        return [h[:, :n] for h in hs]
+        """Whisper encoder on the window itself, not padded to 30 s: the bot can afford 5 s on a CPU, 30 s it cannot.
+        Positional embeddings are cut to the window's length; hidden states as HF returns them (last one normed)."""
+        import torch.nn.functional as F
+        from torch.utils.checkpoint import checkpoint
+        n_mel = x.shape[1] // 160
+        f = self.fe(list(x.float().cpu().numpy()), sampling_rate=16000, return_tensors='pt').input_features[:, :, :n_mel]
+        e = self.bb
+        h = F.gelu(e.conv1(f.to(x.device, dtype=e.conv1.weight.dtype)))
+        h = F.gelu(e.conv2(h)).permute(0, 2, 1)
+        h = h + e.embed_positions.weight[:h.shape[1]]
+        hs = [h]
+        for layer in e.layers:
+            run = lambda t, l=layer: (lambda o: o[0] if isinstance(o, tuple) else o)(l(t, None, layer_head_mask=None))
+            h = checkpoint(run, h, use_reentrant=False) if self.training else run(h)
+            hs.append(h)
+        hs[-1] = e.layer_norm(h)
+        return hs
 
     def embed(self, x):
         if self.whisper:
