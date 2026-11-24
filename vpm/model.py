@@ -1,4 +1,7 @@
-"""Pass model = any HF backbone + learned mix of its layers + attentive statistics pooling + small head -> 0..100."""
+"""Pass model = any HF backbone + learned mix of its layers + attentive statistics pooling + two heads:
+  score  0..100, meaningful only when there is a voice
+  voice  logit of "this window has a voice"; the bot shows "no voice" instead of a percent when it is low
+"""
 import json
 from pathlib import Path
 import torch
@@ -31,6 +34,7 @@ class PassModel(nn.Module):
         self.att = nn.Sequential(nn.Linear(D, 128), nn.Tanh(), nn.Linear(128, 1))
         self.emb = nn.Sequential(nn.LayerNorm(2 * D), nn.Linear(2 * D, hidden), nn.GELU(), nn.Dropout(0.1))
         self.out = nn.Linear(hidden, 1)
+        self.voice = nn.Linear(hidden, 1)
         self.lang = nn.Linear(hidden, n_languages) if n_languages else None
 
     def embed(self, x):
@@ -42,12 +46,16 @@ class PassModel(nn.Module):
         sd = ((a * (h - mu[:, None]) ** 2).sum(1) + 1e-6).sqrt()
         return self.emb(torch.cat([mu, sd], -1))
 
-    def forward(self, x, with_lang=False, lam=1.0):
+    def forward(self, x, heads=False, lam=1.0):
         e = self.embed(x)
         score = torch.sigmoid(self.out(e).squeeze(-1)) * 100
-        if with_lang and self.lang is not None:
-            return score, self.lang(GradReverse.apply(e, lam))
-        return score
+        if not heads:
+            return score
+        lang = self.lang(GradReverse.apply(e, lam)) if self.lang is not None else None
+        return score, self.voice(e).squeeze(-1), lang
+
+    def p_voice(self, x):
+        return torch.sigmoid(self.voice(self.embed(x)).squeeze(-1))
 
     def unfreeze_top(self, n):
         for p in self.bb.parameters():

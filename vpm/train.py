@@ -2,6 +2,10 @@
 
 Each step mixes:  labelled items (scale + order)  |  window pairs of one recording (consistency)
                   TidyVoice speaker in two languages (language)  |  cis windows (cis)  |  miniapp pair votes (order)
+                  windows without a voice (voice flag; score losses are never applied to them)
+Schedule: first WARM of the steps train the heads only (backbone frozen) on scale, order and voice; then the
+consistency, language and adversarial weights ramp from 0 to full by the end of epoch 1 while the top layers
+unfreeze. Starting the invariance terms at full weight lets a fresh head collapse to one score for everyone.
 Selection: mean of per-band MAE over the val bands that have >= 10 items, so no band can quietly fall apart.
 
 Usage: python -m vpm.train --backbone mhubert147 --name mh1 [--epochs 6 --unfreeze 8 --w_lang 1 ...]
@@ -15,6 +19,13 @@ from .config import DATA, SR, WIN, work
 from .audio import load, cut, window_starts
 from .split import recordings
 from .voicecheck import load_cache, window_voiced
+
+NOISE_MAX_SPEECH = 0.05     # a window with < 5 % speech by silero is a "no voice" example
+
+
+def speech_share(bl, start):
+    a = int(round(start / 0.5)); seg = np.asarray(bl[a:a + 10], dtype=np.float32)
+    return float(seg.sum() / 10) if len(seg) else 0.0
 from .probe import train_windows
 from .model import PassModel
 from . import loss as L
@@ -33,6 +44,8 @@ def args():
     ap.add_argument('--w_order', type=float, default=0.5); ap.add_argument('--w_rec', type=float, default=1.0)
     ap.add_argument('--w_lang', type=float, default=1.0); ap.add_argument('--w_adv', type=float, default=0.1)
     ap.add_argument('--w_cis', type=float, default=0.5); ap.add_argument('--w_votes', type=float, default=1.0)
+    ap.add_argument('--w_voice', type=float, default=0.3); ap.add_argument('--b_noise', type=int, default=6)
+    ap.add_argument('--warm', type=float, default=0.05)
     ap.add_argument('--max_rec', type=int, default=4000); ap.add_argument('--seed', type=int, default=0)
     return ap.parse_args()
 
@@ -59,7 +72,7 @@ class Bank:
 def build_banks(a, rng):
     rec = recordings(); vc = load_cache()
     rec_by = rec.set_index('rec')
-    banks = {k: Bank() for k in ('lab', 'val', 'rec', 'lang', 'cis', 'votes')}
+    banks = {k: Bank() for k in ('lab', 'val', 'rec', 'lang', 'cis', 'votes', 'noise')}
     # labelled items
     tw = train_windows()
     for path, g in tw.groupby('path'):
@@ -76,12 +89,17 @@ def build_banks(a, rng):
         bl = vc.get(r.rec)
         if bl is None:
             continue
-        st = [s for s in window_starts(r.duration) if window_voiced(bl, s)]
-        if len(st) < 2:
+        ws = window_starts(r.duration)
+        st = [s for s in ws if window_voiced(bl, s)]
+        silent = [s for s in ws if speech_share(bl, s) < NOISE_MAX_SPEECH]
+        if len(st) < 2 and not silent:
             continue
         x = load(DATA / r.path)
-        for s in rng.permutation(st)[:4]:
-            banks['rec'].add(x, float(s), pad=0, group=r.rec)
+        if len(st) >= 2:
+            for s in rng.permutation(st)[:4]:
+                banks['rec'].add(x, float(s), pad=0, group=r.rec)
+        for s in silent[:2]:
+            banks['noise'].add(x, float(s), pad=0)
         k += 1
         if k >= a.max_rec:
             break
@@ -108,6 +126,17 @@ def build_banks(a, rng):
                     x = load(DATA / r.path)
                     for s in st:
                         banks['cis'].add(x, s, pad=0, y=1 if Lb[spk] == 'f' else 0)
+    # windows people reported as "not a voice"; MUSAN music/noise if present under DATA/noise/
+    nv = pd.read_csv(DATA / 'ratings/model_training_novoice_reports.csv')
+    for r in nv.itertuples():
+        try:
+            banks['noise'].add(load(DATA / str(r.audio_path).replace('/root/voice_AI/', 'voice_AI/'), float(r.segment_start), WIN), 0.0, pad=0)
+        except Exception:
+            pass
+    for f in sorted((DATA / 'noise').rglob('*.wav'))[:3000]:
+        x = load(f)
+        for s in window_starts(len(x) / SR)[:2]:
+            banks['noise'].add(x, s, pad=0)
     # miniapp pair votes (windows taken as heard)
     pv = pd.read_csv(work('target', 'pairs.csv'))
     for r in pv.itertuples():
@@ -160,13 +189,22 @@ def main():
     m.unfreeze_top(a.unfreeze)
     head = [p for n, p in m.named_parameters() if not n.startswith('bb.')]
     bb = [p for p in m.bb.parameters() if p.requires_grad]
+    for p in bb:
+        p.requires_grad = False         # frozen during the warm-up
     opt = torch.optim.AdamW([{'params': bb, 'lr': a.lr_bb}, {'params': head, 'lr': a.lr_head}], weight_decay=0.01)
     lab = banks['lab']; z = np.array([x['z'] for x in lab.meta]); zsd = np.array([x['zsd'] for x in lab.meta])
     steps = a.epochs * (len(lab.x) // a.b_lab); warm = max(1, steps // 20)
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda s: min(1, (s + 1) / warm) * 0.5 * (1 + math.cos(math.pi * min(1, s / steps))))
     n_votes = len(banks['votes'].x) // 2
+    epoch = len(lab.x) // a.b_lab; w0 = int(a.warm * steps)
+    ramp = lambda s: 0.0 if s < w0 else min(1.0, (s - w0) / max(1, epoch - w0))
     best = None; t0 = time.time(); run = []
     for step in range(steps):
+        if step == w0:
+            for p in bb:
+                p.requires_grad = True
+            P('warm-up done: backbone top layers unfrozen')
+        r = ramp(step)
         idx = rng.integers(0, len(lab.x), a.b_lab)
         X = [lab.get(i, rng) for i in idx]
         rp = pairs_of(banks['rec'], a.b_rec, rng) if a.w_rec and len(banks['rec'].x) else []
@@ -177,21 +215,22 @@ def main():
         X += [banks['lang'].get(i, rng, False) for pr in lp for i in pr]
         X += [banks['cis'].get(i, rng, False) for i in ci]
         X += [banks['votes'].get(2 * v + s, rng, False) for v in vi for s in (0, 1)]
+        ni = rng.integers(0, len(banks['noise'].x), a.b_noise) if a.w_voice and len(banks['noise'].x) else []
+        n_voiced = len(X)
+        X += [banks['noise'].get(i, rng, False) for i in ni]
         x = torch.from_numpy(np.stack(X)).to(dev)
         x = x + torch.randn_like(x) * (10 ** -rng.uniform(1.75, 3)) * float(rng.random() < 0.3)
         with torch.autocast('cuda', dtype=torch.bfloat16):
-            if lp and m.lang is not None:
-                p, lg = m(x, with_lang=True, lam=1.0)
-            else:
-                p, lg = m(x), None
+            p, vlog, lg = m(x, heads=True, lam=r)
         p = p.float(); o = a.b_lab
+        yv = torch.cat([torch.ones(n_voiced), torch.zeros(len(ni))]).to(dev)
         zt = torch.tensor(z[idx], device=dev, dtype=torch.float32); st = torch.tensor(zsd[idx], device=dev, dtype=torch.float32)
         parts = {'scale': L.scale(p[:o], zt, st), 'order': a.w_order * L.order_from_consensus(p[:o], zt, st)}
         if rp:
-            q = p[o:o + 2 * len(rp)]; parts['rec'] = a.w_rec * L.same_voice(q[0::2], q[1::2]); o += 2 * len(rp)
+            q = p[o:o + 2 * len(rp)]; parts['rec'] = r * a.w_rec * L.same_voice(q[0::2], q[1::2]); o += 2 * len(rp)
         if lp:
-            q = p[o:o + 2 * len(lp)]; parts['lang'] = a.w_lang * L.same_voice(q[0::2], q[1::2])
-            if lg is not None:
+            q = p[o:o + 2 * len(lp)]; parts['lang'] = r * a.w_lang * L.same_voice(q[0::2], q[1::2])
+            if lg is not None and r > 0:
                 yl = torch.tensor([banks['lang'].meta[i]['lang'] for pr in lp for i in pr], device=dev)
                 parts['adv'] = a.w_adv * torch.nn.functional.cross_entropy(lg[o:o + 2 * len(lp)].float(), yl)
             o += 2 * len(lp)
@@ -203,12 +242,14 @@ def main():
             ok = ~torch.isnan(yv)
             if ok.any():
                 parts['votes'] = a.w_votes * L.order_from_votes(q[0::2][ok], q[1::2][ok], yv[ok])
+        if len(ni):
+            parts['voice'] = a.w_voice * torch.nn.functional.binary_cross_entropy_with_logits(vlog.float(), yv)
         loss = sum(parts.values())
         opt.zero_grad(set_to_none=True); loss.backward()
         torch.nn.utils.clip_grad_norm_(m.parameters(), 1.0); opt.step(); sched.step()
         run.append({k: float(v) for k, v in parts.items()})
         if (step + 1) % 200 == 0:
-            P(f'step {step + 1}/{steps}', {k: round(float(np.mean([r.get(k, 0) for r in run[-200:]])), 4) for k in parts}, f'{time.time() - t0:.0f}s')
+            P(f'step {step + 1}/{steps} ramp {r:.2f}', {k: round(float(np.mean([q.get(k, 0) for q in run[-200:]])), 4) for k in parts}, f'{time.time() - t0:.0f}s')
         if (step + 1) % (len(lab.x) // a.b_lab) == 0 or step + 1 == steps:
             v = evaluate(m, banks['val'], dev, rng); P('val', json.dumps(v))
             if best is None or v['band_mean'] < best:

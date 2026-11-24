@@ -13,8 +13,8 @@ import torch.nn.functional as F
 
 DELTA = 5.0
 TAU = 10.0            # points per logit in the RankNet probability
-CIS_F_FLOOR = 75.0
-CIS_M_CEIL = 15.0
+CIS_F_FLOOR = 90.0
+CIS_M_CEIL = 20.0
 
 
 def scale(p, z, zsd):

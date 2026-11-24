@@ -23,6 +23,7 @@ from .audio import load, window_starts, cut
 from .voicecheck import load_cache, window_voiced
 
 MAX_WIN = 6
+MIN_THR = 0.9
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
@@ -151,7 +152,8 @@ def validate():
     res = pd.DataFrame(res)
     print(res.round(3).to_string(index=False))
     ok = res[(res.hard_error <= 0.01) & (res.error <= 0.01)]
-    thr = float(ok.thr.min()) if len(ok) else None
+    # Telegram voice messages are noisier than read corpora: never go below MIN_THR even if validation allows it
+    thr = max(MIN_THR, float(ok.thr.min())) if len(ok) else None
     json.dump(dict(threshold=thr, table=res.to_dict('records')), open(work('cislabel', 'threshold.json'), 'w'), indent=1)
     print('threshold', thr)
 
